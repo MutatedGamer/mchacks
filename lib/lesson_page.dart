@@ -42,9 +42,17 @@ class _LessonPageState extends State<LessonPage> {
                       "Sample sample sample sample sample",
                       ];
 
+  final noteController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+  }
+  @override
+  void dispose() {
+    // Clean up the controller when the Widget is disposed
+    noteController.dispose();
+    super.dispose();
   }
 
   @override
@@ -107,6 +115,25 @@ class _LessonPageState extends State<LessonPage> {
                 child:
                   noteBullets(),
               ),
+              SingleChildScrollView(
+                child: TextFormField(
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 3,
+                  controller: noteController,
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.teal)
+                      ),
+                      hintText: 'Enter your notes here!',
+                      filled: true,
+                      suffixIcon: IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            //Call something with noteController.text
+                          })),
+                ),
+              )
+
             ],
           ),
     );
