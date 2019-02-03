@@ -4,6 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'dart:convert';
+
 
 part './auth.dart';
 part './login_page.dart';
@@ -12,11 +16,16 @@ part './state_widget.dart';
 part './models/schema.dart';
 part './firestore_api.dart';
 
-final _biggerFont = const TextStyle(fontSize: 28.0, fontFamily: 'sans-serif');
 
+class Constants{
+  static const String Delete = 'Delete';
 
-final String lesson_id = "lesson_1";
-final Bullet bullet = new Bullet("test bullet");
+  static const List<String> choices = <String>[
+    Delete,
+  ];
+}
+
+final _biggerFont = const TextStyle(fontSize: 18.0, fontFamily: 'sans-serif');
 
 
 // Creates a StateWidget (see state_widget.dart) with a child of the main app
@@ -53,19 +62,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   StateModel appState;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
 
 
   // Loading
@@ -144,48 +141,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget getRow(BuildContext context, snapshot) {
-    return Padding(
-        padding: EdgeInsets.all(10.0),
-        child: buildButton("${snapshot["name"]}")
+    return new ListTile(
+        title: new Text(
+          snapshot["name"],
+          style: _biggerFont,
+        ),
+        trailing: new PopupMenuButton<String>(
+          onSelected: choiceAction,
+          itemBuilder: (BuildContext context){
+
+            return Constants.choices.map((String choice){
+              return PopupMenuItem<String>(
+                value: snapshot.documentID,
+                child: Text(choice),
+              );
+            }).toList();
+          },
+        ),
+      onTap: (){
+        _openSubNote(snapshot);
+      },
     );
   }
 
-  Widget buildButton(String buttonTitle){
-    final Color tintColor = Colors.blue;
-    return new Column(
-      children: <Widget>[
-        new Container(
-            margin: const EdgeInsets.only(top: 5.0),
-            child:
-            ButtonTheme(
-                minWidth: MediaQuery.of(context).size.width,
-                height: 50.0,
-                child:
-                new RaisedButton(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text(buttonTitle,
-                    style: new TextStyle(
-                        fontSize: 20.0,
-                        color: Colors.white
-                    ),
-                  ),
-                  color: Colors.blue,
-                  elevation: 4.0,
-                  splashColor: Colors.blueGrey,
-                  onPressed: (){
-                    _openSubNote(buttonTitle);
-                  },
-                )
-            )
-          //  child: new Text(buttonTitle, style: new TextStyle(fontSize: 16.0,
-          // fontWeight: FontWeight.w600, color: tintColor),),
-        )
-      ],
-    );
-  }
 
-  void _openSubNote(String buttonTitle){
+  void _openSubNote(String documentID){
     //TODO: route to different page
+  }
+
+  // Popup Menu Choice Handler
+  void choiceAction(String documentID){
+    final appState = StateWidget.of(context).state;
+    deleteLesson(appState.user.uid, documentID);
   }
 
   _showDialog(BuildContext context) async {
@@ -254,10 +241,17 @@ class _HomePageState extends State<HomePage> {
               );
             }
             return ListView.builder(
+              padding: const EdgeInsets.all(10.0),
               itemExtent: 80.0,
               itemCount: snapshot.data.documents.length,
-              itemBuilder: (context, index) =>
-                  getRow(context, snapshot.data.documents[index]),
+              itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    getRow(context, snapshot.data.documents[index]),
+                    Divider(),
+                  ],
+                );
+              }
             );
           },
         ),
@@ -282,9 +276,11 @@ class _SystemPadding extends StatelessWidget {
   Widget build(BuildContext context) {
     var mediaQuery = MediaQuery.of(context);
     return new AnimatedContainer(
-        padding: mediaQuery.viewInsets,
+        padding: mediaQuery.padding,
         duration: const Duration(milliseconds: 300),
         child: child);
   }
 }
+
+
 

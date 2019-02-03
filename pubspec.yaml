@@ -30,7 +30,6 @@ dependencies:
   google_sign_in: ^4.0.0
   async: ^2.0.6
   flutter_signin_button: ^0.2.5
-  http: any
 
 dev_dependencies:
   flutter_test:
