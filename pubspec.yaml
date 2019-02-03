@@ -29,7 +29,6 @@ dependencies:
   cloud_firestore:  0.8.2+3
   firebase_core: ^0.2.5+1
   google_sign_in: ^3.2.1
-  async: ^2.0.6
   flutter_signin_button: ^0.2.5
   firebase_messaging: 2.1.0
   flutter_local_notifications: 0.4.3

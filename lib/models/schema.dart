@@ -25,3 +25,19 @@ class Bullet {
     'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
   };
 }
+
+class Study {
+  final String keyword;
+  final String fillInTheBlank;
+
+  Study(
+        @required this.keyword,
+        @required this.fillInTheBlank
+      );
+
+  Map<String, dynamic> toJson() => {
+    'keyword': keyword,
+    'fillInTheBlank': fillInTheBlank,
+    'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+  };
+}
