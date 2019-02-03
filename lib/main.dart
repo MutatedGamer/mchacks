@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io';
-import 'dart:convert';
 
 
 part './auth.dart';
@@ -26,7 +26,6 @@ class Constants{
 }
 
 final _biggerFont = const TextStyle(fontSize: 18.0, fontFamily: 'sans-serif');
-
 
 // Creates a StateWidget (see state_widget.dart) with a child of the main app
 // in order to keep the current login information
@@ -135,9 +134,56 @@ class _HomePageState extends State<HomePage> {
 
   final textController = TextEditingController();
 
+  FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+  String textValue = 'Hello World !';
+
   @override
   void initState() {
     super.initState();
+    var android = new AndroidInitializationSettings('mipmap/ic_launcher');
+    var ios = new IOSInitializationSettings();
+    var platform = new InitializationSettings(android, ios);
+
+    firebaseMessaging.configure(
+      onLaunch: (Map<String, dynamic> msg) {
+        print(" onLaunch called ${(msg)}");
+      },
+      onResume: (Map<String, dynamic> msg) {
+        print(" onResume called ${(msg)}");
+      },
+      onMessage: (Map<String, dynamic> msg) {
+        showNotification(msg);
+        print(" onMessage called ${(msg)}");
+      },
+    );
+    firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, alert: true, badge: true));
+    firebaseMessaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings setting) {
+      print('IOS Setting Registed');
+    });
+    firebaseMessaging.getToken().then((token) {
+      update(token);
+    });
+  }
+
+  showNotification(Map<String, dynamic> msg) async {
+    var android = new AndroidNotificationDetails(
+      'sdffds dsffds',
+      "CHANNLE NAME",
+      "channelDescription",
+    );
+    var iOS = new IOSNotificationDetails();
+    var platform = new NotificationDetails(android, iOS);
+  }
+
+  update(String token) {
+    final appState = StateWidget.of(context).state;
+    print(token);
+    final user = Firestore.instance.collection('users').document(appState.user.uid);
+    user.updateData({"token":"$token"});
+    textValue = token;
+    setState(() {});
   }
 
   Widget getRow(BuildContext context, snapshot) {

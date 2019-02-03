@@ -10,11 +10,12 @@ void main() {
   String features = "keywords";
   String keywordsLimit = "keywords.limit=10";
   String fullUrl = "$url$version&url=www.ibm.com&features=$features&$keywordsLimit";
-  Uri uri = Uri.parse("$url$version&url=www.ibm.com&features=$features&keywords.limit=10");
+  Uri uri = Uri.parse(
+      "$url$version&url=www.ibm.com&features=$features&keywords.limit=10");
   final auth = base64Encode(utf8.encode("apikey:$apiKey"));
 
-  Future future = http.get(fullUrl, headers: {"Authorization":"Basic $auth"}).then((response)
-  => print(response.body));
+  Future future = http.get(fullUrl, headers: {"Authorization": "Basic $auth"})
+      .then((response) => print(response.body));
 //  http.get(fullUrl, headers: {"Authorization":"Basic $auth"});
 //  var client = new http.Client();
 //  var request = new http.Request("GET", uri);
@@ -48,3 +49,4 @@ void main() {
 //  Future future = client.send(request).then((response)
 //  => response.stream.bytesToString().then((value)
 //  => print(value.toString()))).catchError((error) => print(error.toString()));
+}
