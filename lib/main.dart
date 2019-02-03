@@ -20,7 +20,7 @@ part './models/schema.dart';
 part './firestore_api.dart';
 part './lesson_page.dart';
 part './watson_processing.dart';
-
+part './learn.dart';
 
 class Constants{
   static const String Delete = 'Delete';
@@ -30,7 +30,9 @@ class Constants{
   ];
 }
 
+
 final _biggerFont = const TextStyle(fontSize: 18.0, fontFamily: 'sans-serif');
+final _mediumFont = const TextStyle(fontSize: 20.0, fontFamily: 'sans-serif');
 
 // Creates a StateWidget (see state_widget.dart) with a child of the main app
 // in order to keep the current login information

@@ -32,19 +32,6 @@ class _LessonPageState extends State<LessonPage> {
   String lessonID;
 
   _LessonPageState(this.lessonID);
-  List bulletNotes = ["Sample sample sample sample sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      "Sample sample sample sample sample",
-                      ];
 
   final noteController = TextEditingController();
 
@@ -101,7 +88,9 @@ class _LessonPageState extends State<LessonPage> {
                           splashColor: Colors.blueGrey,
                           shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                           onPressed: (){
-                            return;
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => LearnPage(lessonID))
+                            );
                           },
                         ),
                       ),
@@ -200,6 +189,7 @@ class _LessonPageState extends State<LessonPage> {
   }
 
   void submitNote(TextEditingController controller){
+    if (controller.text == "") return;
     final appState = StateWidget.of(context).state;
     final Bullet bullet = new Bullet(controller.text);
     createBullet(appState.user.uid, lessonID, bullet);
