@@ -1,33 +1,37 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+part of './main.dart';
 
-void main() {
-  runApp(Main());
-}
+//void main() {
+//  runApp(Main());
+//}
 
-class Main extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Creating new lesson',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: LessonPage(),
-    );
-  }
-}
+//class Main extends StatelessWidget {
+//  @override
+//  Widget build(BuildContext context) {
+//    return MaterialApp(
+//      title: 'Creating new lesson',
+//      theme: ThemeData(
+//        primarySwatch: Colors.blue,
+//      ),
+//      home: LessonPage(),
+//    );
+//  }
+//}
 
 class LessonPage extends StatefulWidget {
-  LessonPage({Key key}) : super(key: key);
+
+  String lessonID;
+
+  LessonPage(this.lessonID);
 
   @override
-  _LessonPageState createState() => _LessonPageState();
+  _LessonPageState createState() => _LessonPageState(lessonID);
 }
 
 class _LessonPageState extends State<LessonPage> {
+
+  String lessonID;
+
+  _LessonPageState(this.lessonID);
   List bulletNotes = ["Sample sample sample sample sample sample sample sample sample",
                       "Sample sample sample sample sample",
                       "Sample sample sample sample sample",
@@ -57,63 +61,57 @@ class _LessonPageState extends State<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Creating a New Lesson"),
-        ),
-        body:
+    final appState = StateWidget.of(context).state;
+    final lesson = Firestore.instance.collection('users')
+                    .document(appState.user.uid)
+                    .collection('lessons')
+                    .document(lessonID);
+    return StreamBuilder(
+      stream: lesson.snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return new Text("Loading...");
+        }
+        var lesson = snapshot.data;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(lesson['name']),
+          ),
+          body:
           new Column(
             children: <Widget>[
               //the following textfields must be positioned on the right, but they are not the center
-              lessonTitle,
               new Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child:
-                      new RaisedButton(
-                        padding: EdgeInsets.all(10.0),
-                        child: Text("LEARN",
-                          style: new TextStyle(
-                              fontSize: 20.0,
-                              color: Colors.white
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child:
+                        new RaisedButton(
+                          padding: EdgeInsets.all(10.0),
+                          child: Text("LEARN",
+                            style: new TextStyle(
+                                fontSize: 24.0,
+                                color: Colors.white
+                            ),
                           ),
-                        ),
-                        color: Colors.blue,
-                        elevation: 4.0,
-                        splashColor: Colors.blueGrey,
-                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                        onPressed: (){
-                          _openSubNote();
-                        },
-                      ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: new RaisedButton(
-                      padding: EdgeInsets.all(10.0),
-                      child: Text("EDIT",
-                        style: new TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.white
+                          color: Colors.blue,
+                          elevation: 4.0,
+                          splashColor: Colors.blueGrey,
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+                          onPressed: (){
+                            return;
+                          },
                         ),
                       ),
-                      color: Colors.blue,
-                      elevation: 4.0,
-                      splashColor: Colors.blueGrey,
-                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                      onPressed: (){
-                        _openSubNote();
-                      },
                     ),
-                  ),
 
-                ]
+                  ]
               ),
               Expanded(
                 child:
-                  noteBullets(),
+                noteBullets(),
               ),
               SingleChildScrollView(
                 child: TextFormField(
@@ -127,39 +125,58 @@ class _LessonPageState extends State<LessonPage> {
                       hintText: 'Enter your notes here!',
                       filled: true,
                       suffixIcon: IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: Icon(Icons.check_circle  ),
                           onPressed: () {
-                            //Call something with noteController.text
+                            submitNote(noteController);
                           })),
                 ),
               )
 
             ],
           ),
+        );
+      }
     );
   }
 
-  final lessonTitle = new Container(
-    //TODO: Firebase traverse to get lesson title
-    child: new Text(
-        "Traverse database for text here",
-        textAlign: TextAlign.center,
-        style: new TextStyle(
-          fontSize: 30.0,
-          color: Colors.black
-        )
-    )
-  );
+//  final lessonTitle = new Container(
+//    //TODO: Firebase traverse to get lesson title
+//    child: new Text(
+//        "Traverse database for text here",
+//        textAlign: TextAlign.center,
+//        style: new TextStyle(
+//          fontSize: 30.0,
+//          color: Colors.black
+//        )
+//    )
+//  );
 
   Widget noteBullets(){
+    final appState = StateWidget.of(context).state;
+    final lesson = Firestore.instance.collection('users')
+        .document(appState.user.uid)
+        .collection('lessons')
+        .document(lessonID)
+        .collection('regular_input')
+        .orderBy('timestamp', descending: true);
+    
+    return StreamBuilder(
+        stream: lesson.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return new Text("Loading...");
+          }
+          var lesson = snapshot.data;
+          return new ListView.builder(
+            itemCount: lesson.documents.length,
+            itemBuilder: (BuildContext context, int index) {
+              return makeBullet(lesson.documents[index]['text']);
+            },
+          );
+        }
+      );
+    }
 
-    return new ListView.builder(
-      itemCount: bulletNotes.length,
-      itemBuilder: (BuildContext context, int index) {
-        return makeBullet(bulletNotes[index]);
-      },
-    );
-  }
 
   Widget makeBullet(String text){
     return new GestureDetector(
@@ -182,7 +199,10 @@ class _LessonPageState extends State<LessonPage> {
 
   }
 
-  void _openSubNote(){
-    //TODO: route to different page
+  void submitNote(TextEditingController controller){
+    final appState = StateWidget.of(context).state;
+    final Bullet bullet = new Bullet(controller.text);
+    createBullet(appState.user.uid, lessonID, bullet);
+    controller.clear();
   }
 }

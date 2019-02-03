@@ -6,6 +6,8 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 
 
@@ -15,6 +17,7 @@ part './state_widget.dart';
 //part './main_page.dart';
 part './models/schema.dart';
 part './firestore_api.dart';
+part './lesson_page.dart';
 
 
 class Constants{
@@ -34,13 +37,14 @@ void main() => runApp(new StateWidget(
 ));
 
 
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'mcHacks Project',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
       ),
       debugShowCheckedModeBanner: false,
       routes: {
@@ -205,14 +209,16 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       onTap: (){
-        _openSubNote(snapshot);
+        _openSubNote(snapshot.documentID);
       },
     );
   }
 
 
   void _openSubNote(String documentID){
-    //TODO: route to different page
+    Navigator.push(context,
+      MaterialPageRoute(builder: (context) => LessonPage(documentID))
+    );
   }
 
   // Popup Menu Choice Handler
