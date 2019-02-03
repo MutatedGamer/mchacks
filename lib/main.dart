@@ -24,6 +24,7 @@ part './learn.dart';
 
 class Constants{
   static const String Delete = 'Delete';
+  static const PrimaryColor = (Colors.green);
 
   static const List<String> choices = <String>[
     Delete,
@@ -79,6 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
       home: Scaffold(
         appBar: AppBar(
           title: Text('Loading...'),
+          backgroundColor: Constants.PrimaryColor,
         ),
         body: _buildLoadingIndicator(),
         ),
@@ -198,7 +200,7 @@ class _HomePageState extends State<HomePage> {
     return new ListTile(
         title: new Text(
           snapshot["name"],
-          style: _biggerFont,
+          style: _biggerFont
         ),
         trailing: new PopupMenuButton<String>(
           onSelected: choiceAction,
@@ -280,6 +282,7 @@ class _HomePageState extends State<HomePage> {
       home: Scaffold(
         appBar: AppBar(
           title: Text('Your Notes'),
+          backgroundColor: Constants.PrimaryColor,
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.exit_to_app),

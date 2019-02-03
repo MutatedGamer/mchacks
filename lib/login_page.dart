@@ -22,9 +22,17 @@ class _LoginScreenState extends  State<LoginScreen> {
                 padding: EdgeInsets.only(top: 50),
                 child: Text(
                   "Learning in the Cloud",
-                  style: _biggerFont,
+                  style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
                 ),
               ),
+            ),
+            Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: Image.asset(
+                  'images/LearningCloud.jpg'
+                )
+              )
             ),
             Center(
               child: Padding(
