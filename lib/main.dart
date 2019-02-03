@@ -3,17 +3,30 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part './auth.dart';
 part './login_page.dart';
+part './state_widget.dart';
 //part './main_page.dart';
+part './models/schema.dart';
+part './firestore_api.dart';
 
 final _biggerFont = const TextStyle(fontSize: 28.0, fontFamily: 'sans-serif');
 
-void main() => runApp(MyApp());
+
+final String lesson_id = "lesson_1";
+final Bullet bullet = new Bullet("test bullet");
+
+
+// Creates a StateWidget (see state_widget.dart) with a child of the main app
+// in order to keep the current login information
+void main() => runApp(new StateWidget(
+  child: new MyApp(),
+));
+
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,39 +34,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: _handleCurrentScreen(),
+      debugShowCheckedModeBanner: false,
+      routes: {
+        '/': (context) => MyHomePage(),
+        '/login': (context) => LoginScreen(),
+      },
     );
   }
 }
 
-Widget _handleCurrentScreen() {
-  return new StreamBuilder<FirebaseUser>(
-    stream: FirebaseAuth.instance.onAuthStateChanged,
-    builder: (BuildContext context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return new SplashScreen();
-      } else {
-        if (snapshot.hasData) {
-          return new MyHomePage(title: "mcHacks Project");
-        }
-        return new LoginScreen();
-      }
-    }
-  );
-}
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -62,6 +54,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  StateModel appState;
 
   void _incrementCounter() {
     setState(() {
@@ -74,48 +67,41 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+
+  // Loading
+  Widget _buildLoading(){
+    return MaterialApp(
+      title: 'Loading...',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Loading...'),
+        ),
+        body: _buildLoadingIndicator(),
+        ),
+      );
+  }
+
+
+  Center _buildLoadingIndicator() {
+    return Center(
+      child: new CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildContent() {
+    if (appState.isLoading) {
+      return _buildLoading();
+    } else if (!appState.isLoading && appState.user == null) {
+      return new LoginScreen();
+    } else {
+      return HomePage();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () { _signOut(); },
-          ),
-        ],
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    appState = StateWidget.of(context).state;
+    return _buildContent();
   }
 }
 
@@ -124,19 +110,181 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-class SplashScreen extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  HomePage({Key key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+
+Widget _buildListItem(BuildContext context, DocumentSnapshot document) {
+  return ListTile(
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+                document['name']
+            ),
+          ),
+        ],
+      )
+  );
+}
+
+
+
+class _HomePageState extends State<HomePage> {
+
+  final textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Widget getRow(BuildContext context, snapshot) {
+    return Padding(
+        padding: EdgeInsets.all(10.0),
+        child: buildButton("${snapshot["name"]}")
+    );
+  }
+
+  Widget buildButton(String buttonTitle){
+    final Color tintColor = Colors.blue;
+    return new Column(
+      children: <Widget>[
+        new Container(
+            margin: const EdgeInsets.only(top: 5.0),
+            child:
+            ButtonTheme(
+                minWidth: MediaQuery.of(context).size.width,
+                height: 50.0,
+                child:
+                new RaisedButton(
+                  padding: EdgeInsets.all(10.0),
+                  child: Text(buttonTitle,
+                    style: new TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.white
+                    ),
+                  ),
+                  color: Colors.blue,
+                  elevation: 4.0,
+                  splashColor: Colors.blueGrey,
+                  onPressed: (){
+                    _openSubNote(buttonTitle);
+                  },
+                )
+            )
+          //  child: new Text(buttonTitle, style: new TextStyle(fontSize: 16.0,
+          // fontWeight: FontWeight.w600, color: tintColor),),
+        )
+      ],
+    );
+  }
+
+  void _openSubNote(String buttonTitle){
+    //TODO: route to different page
+  }
+
+  _showDialog(BuildContext context) async {
+    final appState = StateWidget.of(context).state;
+    await showDialog<String>(
+      context: context,
+      child: new _SystemPadding(child: new AlertDialog(
+        contentPadding: const EdgeInsets.all(16.0),
+        content: new Row(
+          children: <Widget>[
+            new Expanded(
+              child: new TextField(
+                controller: textController,
+                autofocus: true,
+                decoration: new InputDecoration(
+                    labelText: 'Notes name', hintText: 'eg. "Calculus Lecture 2"'),
+              ),
+            )
+          ],
+        ),
+        actions: <Widget>[
+          new FlatButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
+                Navigator.pop(context);
+                textController.clear();
+              }),
+          new FlatButton(
+              child: const Text('SAVE'),
+              onPressed: () {
+                Lesson lesson = new Lesson(textController.text);
+                createLesson(appState.user.uid, lesson);
+                Navigator.pop(context);
+                textController.clear();
+              })
+        ],
+      ),),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appState = StateWidget.of(context).state;
+    //createBullet(appState.user.uid, lesson_id, bullet);
+
+    //print(appState.user.uid);
     return MaterialApp(
       title: 'Welcome to Flutter',
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Splash Screen'),
+          title: Text('Your Notes'),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.exit_to_app),
+              onPressed: () { StateWidget.of(context).signOutOfGoogle(); },
+            ),
+          ],
         ),
-        body: Center(
-          child: Text('Hello World'),
+        body: StreamBuilder(
+          stream: Firestore.instance.collection('users').document(appState.user.uid).collection('lessons').orderBy('timestamp', descending: false).snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return Center(child: const Text('Loading...'));
+            if (snapshot.data.documents.length == 0) {
+              return Center(
+                child: Text("Add a lesson!"),
+              );
+            }
+            return ListView.builder(
+              itemExtent: 80.0,
+              itemCount: snapshot.data.documents.length,
+              itemBuilder: (context, index) =>
+                  getRow(context, snapshot.data.documents[index]),
+            );
+          },
+        ),
+        floatingActionButton: new FloatingActionButton(
+            elevation: 0.0,
+            child: new Icon(Icons.add),
+            backgroundColor: new Color(0xFFE57373),
+            onPressed: (){_showDialog(context);}
         ),
       ),
     );
   }
 }
+
+
+class _SystemPadding extends StatelessWidget {
+  final Widget child;
+
+  _SystemPadding({Key key, this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var mediaQuery = MediaQuery.of(context);
+    return new AnimatedContainer(
+        padding: mediaQuery.viewInsets,
+        duration: const Duration(milliseconds: 300),
+        child: child);
+  }
+}
+

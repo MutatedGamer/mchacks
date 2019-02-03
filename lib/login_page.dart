@@ -1,11 +1,12 @@
 part of './main.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
 
-  var googleButton = SignInButton(
-    Buttons.Google,
-    onPressed: () => _authenticateWithGoogle(),
-  );
+class _LoginScreenState extends  State<LoginScreen> {
+
 
   @override
   Widget build(BuildContext context) {
@@ -14,22 +15,26 @@ class LoginScreen extends StatelessWidget {
       home: Scaffold(
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(top: 50),
-                  child: Text(
-                    "Learning in the Cloud",
-                    style: _biggerFont,
-                  ),
+            Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 50),
+                child: Text(
+                  "Learning in the Cloud",
+                  style: _biggerFont,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30.0),
-                  child: googleButton,
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 30.0),
+                child: SignInButton(
+                  Buttons.Google,
+                  onPressed: () => StateWidget.of(context).signInWithGoogle(),
                 ),
-              ],
-            )
+              ),
+            ),
           ],
         ),
       ),
